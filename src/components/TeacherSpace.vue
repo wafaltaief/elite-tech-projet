@@ -237,6 +237,7 @@ export default {
       try {
         const auth = getAuth();
         const user = auth.currentUser;
+        const test ="azerty";
 
         if (user) {
           const docRef = doc(db, "users", user.uid);
