@@ -10,6 +10,7 @@ import CourseDetails from "@/components/CourseDetails.vue";
 import AdminDashboard from "../components/admin/AdminDashboard.vue";
 import ManageLessons from "../components/admin/ManageLessons.vue";
 import ManageUsers from "../components/admin/ManageUsers.vue";
+import { requireAuth } from "./authGuard";
 
 const routes = [
   // General Routes
@@ -35,15 +36,17 @@ const routes = [
     path: '/teacher-space',
     name: 'TeacherSpace',
     component: TeacherSpace,
+    beforeEnter: requireAuth
   },
   {
     path: '/student-space',
     name: 'StudentSpace',
     component: StudentSpace,
+    beforeEnter: requireAuth
   },
-  { path: "/admin", component: AdminDashboard },
-  { path: "/admin/lessons", component: ManageLessons },
-  { path: "/admin/users", component: ManageUsers },
+  { path: "/admin", component: AdminDashboard ,beforeEnter: requireAuth},
+  { path: "/admin/lessons", component: ManageLessons ,beforeEnter: requireAuth},
+  { path: "/admin/users", component: ManageUsers ,beforeEnter: requireAuth},
 ];
 
 const router = createRouter({

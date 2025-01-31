@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- <AdminPanel></AdminPanel> -->
+    <AdminPanel></AdminPanel>
     <h2 class="subtitle">List of Users</h2>
     <button class="logout-button" @click="$router.go(-1)">Back</button>
     <table class="user-table">
@@ -51,11 +51,11 @@
 <script>
 import { db } from "../../firebase";
 import { collection, getDocs, deleteDoc, doc, addDoc } from "firebase/firestore";
-// import AdminPanel from "./AdminPanel.vue";
+import AdminPanel from "./AdminPanel.vue";
 export default {
-  //   components: {
-  //   AdminPanel
-  // },
+    components: {
+    AdminPanel
+  },
   data() {
     return {
       users: [],

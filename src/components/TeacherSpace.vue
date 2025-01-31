@@ -15,18 +15,6 @@
         <li><strong>Date of Birth:</strong> {{ profile.date_naiss }}</li>
       </ul>
     </div>
-  <div class="add-lessons">
-    <h2>Add a New lesson</h2>
-  <form @submit.prevent="addLesson" class="add-lesson-form">
-  <input type="text" v-model="newLesson.title" placeholder="Lesson Title" required />
-  <textarea v-model="newLesson.description" placeholder="Lesson Description" required></textarea>
-  <input type="text" v-model="newLesson.instructor" placeholder="Instructor Name" required />
-  <input type="text" v-model="newLesson.duration" placeholder="Duration (e.g., 4 weeks)" required />
-  <button type="submit" class="add-button">Add Lesson</button>
-</form>
-  </div>
-
-
     <!-- Add Course Form -->
     <div class="add-course">
       <h2>Add a New Course</h2>
@@ -119,44 +107,12 @@
         </li>
       </ul>
     </div>
-    <div class="manage-Lessons" v-if="filteredLessons.length">
-      <h2>My Lessons</h2>
-      <ul class="Lessons-list">
-        <li v-for="course in filteredCourses" :key="lesson.id" class="lesson-item">
-          <div class="lesson-info">
-            <strong>{{ lesson.title }}</strong> {{ lesson.description }} - {{ lesson.duration }} - {{ lesson.instructor }}
-          </div>
-          <div class="actions">
-            <button @click="deleteCourse(lesson.id)" class="delete-button">Delete</button>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Messages Section
-    <div class="messages-section">
-      <h2>Messages</h2>
-      <div class="messages-list">
-        <ul>
-          <li v-for="message in messages" :key="message.id">
-            <strong>{{ message.senderName }}:</strong> {{ message.text }}
-          </li>
-        </ul>
-      </div>
-      <div class="send-message">
-        <input 
-          type="text" 
-          v-model="newMessage" 
-          placeholder="Type your message..." 
-        />
-        <button @click="sendMessage">Send</button>
-      </div> -->
   </div>
 </template>
 
 <script>
 import { getAuth, signOut } from "firebase/auth";
-import { collection, deleteDoc, addDoc, getDoc, getDocs, doc } from "firebase/firestore";
+import { collection, deleteDoc, getDoc, getDocs, doc } from "firebase/firestore";
 import { db} from "../firebase"; 
 
 export default {
@@ -182,7 +138,7 @@ export default {
         duration: "" 
       },
       courses: [],
-      lesson:[],
+      // lesson:[],
       isLoading: false,
     //   messages: [],
     //   newMessage: "",
@@ -194,10 +150,6 @@ export default {
       if (!this.profile) return [];
       return this.courses.filter((course) => course.teacherId === this.profile.id);
     },
-    filteredLessons() {
-      if (!this.profile) return [];
-      return this.lesson.filter((lesson) => lesson.teacherId === this.profile.id);
-    },
   },
   async created() {
     await this.fetchProfile();
@@ -205,47 +157,17 @@ export default {
     // this.fetchMessages();
   },
   methods: {
-    // fetchMessages() {
-    //   const messagesRef = query(
-    //     collection(db, "messages"),
-    //     orderBy("timestamp", "asc")
-    //   );
-    //   onSnapshot(messagesRef, (snapshot) => {
-    //     this.messages = snapshot.docs.map((doc) => ({
-    //       id: doc.id,
-    //       ...doc.data(),
-    //     }));
-    //   });
-    // },
-    // async sendMessage() {
-    //   if (!this.newMessage.trim()) return;
-
-    //   const auth = getAuth();
-    //   const user = auth.currentUser;
-
-    //   if (user) {
-    //     await addDoc(collection(db, "messages"), {
-    //       text: this.newMessage,
-    //       senderId: user.uid,
-    //       senderName: this.profile.username,
-    //       timestamp: Date.now(),
-    //     });
-    //     this.newMessage = "";
-    //   }
-    // },
     async fetchProfile() {
       try {
         const auth = getAuth();
         const user = auth.currentUser;
-        const test ="azerty";
-
         if (user) {
           const docRef = doc(db, "users", user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
             this.profile = docSnap.data();
-            this.profile.id = user.uid; // Store user ID for filtering
+            this.profile.id = user.uid; 
           } else {
             console.error("No such document!");
           }
@@ -296,46 +218,6 @@ export default {
         console.error("Error deleting course: ", error);
       }
     },
-    async fetchCourses() {
-      try {
-        const coursesCollection = collection(db, "courses");
-        const coursesSnapshot = await getDocs(coursesCollection);
-        this.courses = coursesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      } catch (error) {
-        console.error("Error fetching courses: ", error);
-      }
-    },
-    async addCourse() {
-      try {
-        this.isLoading = true;
-
-        if (!this.newCourse.name || !this.newCourse.type || !this.newCourse.format || !this.newCourse.startDate || !this.newCourse.endDate || !this.newCourse.durationValue || !this.newCourse.description) {
-          alert("Please fill in all fields.");
-          this.isLoading = false;
-          return;
-        }
-
-        alert("Lessons added successfully!");
-        this.newLesson = { title: "", duration: "", description: "", instructor: "", };
-        await this.fetchLesson();
-      } catch (error) {
-        console.error("Error adding Lesson:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async deleteLessons(LessonId) {
-      try {
-        await deleteDoc(doc(db, "lesson", this.LessonId));
-        alert("Lessons deleted successfully!");
-        this.lesson = this.lesson.filter((lesson) => lesson.id !== LessonId);
-      } catch (error) {
-        console.error("Error deleting lesson: ", error);
-      }
-    },
     async logout() {
       try {
         const auth = getAuth();
@@ -345,27 +227,7 @@ export default {
         console.error("Error during logout: ", error);
       }
     },
-
-
   },
-
-  //add lesson 
-  async addLesson() {
-  if (!this.newLesson || !this.newLesson.title || !this.newLesson.description || !this.newLesson.instructor || !this.newLesson.duration) {
-    alert("Please fill in all fields.");
-    return;
-  }
-  try {
-    const lessonsCollection = collection(db, "lessons");
-    const docRef = await addDoc(lessonsCollection, this.newLesson);
-    console.log("Lesson added with ID:", docRef.id); 
-    alert("Lesson added successfully!");
-    this.newLesson = { title: "", description: "", instructor: "", duration: "" };  // Reset newLesson
-  } catch (error) {
-    console.error("Error adding lesson: ", error);
-  }
-},
-
 };
 </script>
 <style scoped>
