@@ -1,11 +1,13 @@
 <template>
     <div>
-      <div class="sidebar"><AdminPanel></AdminPanel></div>
+      <!-- <div class="sidebar"><AdminPanel></AdminPanel></div> -->
     <div class="content">
       <div class="header-container">
-        <button class="logout-button" @click="$router.go(-1)">Back</button>
+        <!-- <button class="logout-button" @click="$router.go(-1)">Back</button> -->
         <h2 class="subtitle">Manage Lessons</h2>
       </div>
+      <button class="logout-button" @click="$router.go(-1)">Back</button>
+
       <table class="lesson-table">
         <button class="logout-button" @click="$router.go(-1)">Back</button>
         <thead>
@@ -35,12 +37,12 @@
   <script>
   import { db } from "../../firebase";
   import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
-import AdminPanel from "./AdminPanel.vue";
+// import AdminPanel from "./AdminPanel.vue";
   
   export default {
-    components: {
-    AdminPanel
-  },
+  //   components: {
+  //   AdminPanel
+  // },
     data() {
       return {
         lessons: [],

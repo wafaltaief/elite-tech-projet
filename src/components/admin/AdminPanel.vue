@@ -7,9 +7,6 @@
         <router-link to="/admin/users">👥 Manage Users</router-link>
         <button class="logout-button" @click="logout">Logout</button>
       </aside>
-  
-      
-   
   </template>
   
   <script>

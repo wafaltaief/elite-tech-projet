@@ -1,8 +1,8 @@
 <template>
   <div>
-    <AdminPanel></AdminPanel>
     <h2 class="subtitle">List of Users</h2>
     <button class="logout-button" @click="$router.go(-1)">Back</button>
+
     <table class="user-table">
       <thead>
         <tr>
@@ -35,53 +35,161 @@
     <div class="signup-container">
       <h1>Add User</h1>
       <form @submit.prevent="signUp">
-        <div class="form-group" v-for="(field, index) in formFields" :key="index">
-          <label :for="field.id">{{ field.label }}:</label>
-          <input v-if="field.type !== 'select'" :type="field.type" :id="field.id" v-model="newUser[field.model]" />
-          <select v-else :id="field.id" v-model="newUser[field.model]">
-            <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" v-model="username" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" v-model="email" />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone:</label>
+          <input type="text" id="phone" v-model="phone" />
+        </div>
+
+        <div class="form-group">
+          <label for="date_naiss">Date of Birth:</label>
+          <input type="date" id="date_naiss" v-model="date_naiss" />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Role:</label>
+          <select id="role" v-model="role">
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
           </select>
         </div>
-        <button type="submit" class="add-button">Add</button>
+
+        <div v-if="role === 'teacher'" class="form-group">
+          <label for="specialty">Specialty:</label>
+          <select id="specialty" v-model="specialty">
+            <option value="math">Mathematics</option>
+            <option value="informatics">Informatics</option>
+            <option value="science">Science</option>
+            <option value="eco-gestion">Economics & Management</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" v-model="password" />
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password:</label>
+          <input type="password" id="confirmPassword" v-model="confirmPassword" />
+        </div>
+
+        <button type="submit" :disabled="loading">Add</button>
       </form>
     </div>
   </div>
 </template>
 
 <script>
-import { db } from "../../firebase";
-import { collection, getDocs, deleteDoc, doc, addDoc } from "firebase/firestore";
-import AdminPanel from "./AdminPanel.vue";
+import { auth, db } from "../../firebase"; // Import Firebase and Firestore
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { collection, getDocs, deleteDoc, doc, setDoc, query, where } from "firebase/firestore";
+
 export default {
-    components: {
-    AdminPanel
-  },
   data() {
     return {
+      username: '',
+      email: '',
+      phone: '',
+      date_naiss: '',
+      role: '',
+      specialty: '',
+      password: '',
+      confirmPassword: '',
       users: [],
       hasTeachers: false,
-      newUser: {
-        username: "",
-        email: "",
-        phone: "",
-        date_naiss: "",
-        role: "student",
-        specialty: ""
-      },
-      formFields: [
-        { label: "Username", id: "username", model: "username", type: "text" },
-        { label: "Email", id: "email", model: "email", type: "email" },
-        { label: "Phone", id: "phone", model: "phone", type: "text" },
-        { label: "Date of Birth", id: "date_naiss", model: "date_naiss", type: "date" },
-        { label: "Role", id: "role", model: "role", type: "select", options: ["admin", "teacher", "student"] },
-        { label: "Specialty", id: "specialty", model: "specialty", type: "select", options: ["math", "informatics", "science", "eco-gestion"] }
-      ]
+      loading: false,
     };
   },
   async created() {
     await this.fetchUsers();
   },
   methods: {
+    async signUp() {
+      // Frontend validation
+      if (
+        !this.username ||
+        !this.email ||
+        !this.phone ||
+        !this.date_naiss ||
+        !this.role ||
+        !this.password ||
+        !this.confirmPassword ||
+        (this.role === "teacher" && !this.specialty)
+      ) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      if (this.password !== this.confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+      }
+
+      this.loading = true; // Show loading state
+
+      try {
+        // Check if username or email exists
+        const usernameQuery = query(collection(db, "users"), where("username", "==", this.username));
+        const emailQuery = query(collection(db, "users"), where("email", "==", this.email));
+
+        const usernameSnapshot = await getDocs(usernameQuery);
+        const emailSnapshot = await getDocs(emailQuery);
+
+        if (!usernameSnapshot.empty) {
+          alert("Username already exists.");
+          return;
+        }
+
+        if (!emailSnapshot.empty) {
+          alert("Email already exists.");
+          return;
+        }
+
+        // Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          this.email,
+          this.password
+        );
+        const user = userCredential.user;
+
+        // Save user data to Firestore
+        const userData = {
+          username: this.username,
+          email: this.email,
+          phone: this.phone,
+          date_naiss: this.date_naiss,
+          role: this.role,
+        };
+
+        if (this.role === "teacher") {
+          userData.specialty = this.specialty;
+        }
+
+        await setDoc(doc(db, "users", user.uid), userData);
+
+        alert("User created successfully!");
+        this.resetForm();
+        this.fetchUsers(); // Refresh the list of users
+      } catch (error) {
+        console.error("Error signing up:", error.message);
+        alert(`Failed: ${error.message}`);
+      } finally {
+        this.loading = false; // Hide loading state
+      }
+    },
+
     async fetchUsers() {
       try {
         const usersCollection = collection(db, "users");
@@ -92,6 +200,7 @@ export default {
         console.error("Error fetching users: ", error);
       }
     },
+
     async deleteUser(userId) {
       if (confirm("Are you sure you want to delete this user?")) {
         try {
@@ -103,19 +212,21 @@ export default {
         }
       }
     },
-    async signUp() {
-      try {
-        const usersCollection = collection(db, "users");
-        await addDoc(usersCollection, this.newUser);
-        alert("User added successfully!");
-        this.fetchUsers();
-      } catch (error) {
-        console.error("Error adding user: ", error);
-      }
+
+    resetForm() {
+      this.username = '';
+      this.email = '';
+      this.phone = '';
+      this.date_naiss = '';
+      this.role = '';
+      this.specialty = '';
+      this.password = '';
+      this.confirmPassword = '';
     }
   }
 };
 </script>
+
 
 <style scoped>
 .signup-container {

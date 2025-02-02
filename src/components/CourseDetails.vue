@@ -36,7 +36,7 @@
           }
         } catch (error) {
           console.error("Error fetching lesson details: ", error);
-          alert("Failed to load lesson details. Please try again.");
+          // alert("Failed to load lesson details. Please try again.");
         }
       },
     },

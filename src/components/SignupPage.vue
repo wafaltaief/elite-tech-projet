@@ -11,18 +11,6 @@
   <div class="signup-container">
     <h1>Sign Up</h1>
     <form @submit.prevent="signUp">
-      <!-- First Name -->
-      <div class="form-group">
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName" v-model="firstName" />
-      </div>
-
-      <!-- Last Name -->
-      <div class="form-group">
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName" v-model="lastName" />
-      </div>
-
       <!-- Username -->
       <div class="form-group">
         <label for="username">Username:</label>
@@ -94,8 +82,6 @@ import { doc, setDoc } from "firebase/firestore";
 export default {
   data() {
     return {
-      firstName: '',
-      lastName: '', 
       username: '',
       email: '',
       phone: '',
@@ -110,8 +96,6 @@ export default {
     async signUp() {
       // Frontend validation
       if (
-        !this.firstName ||
-        !this.lastName ||
         !this.username ||
         !this.email ||
         !this.phone ||
@@ -141,8 +125,6 @@ export default {
 
         // Save user data to Firestore
         const userData = {
-          firstName: this.firstName,
-          lastName: this.lastName,
           username: this.username,
           email: this.email,
           phone: this.phone,
